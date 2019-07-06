@@ -108,6 +108,7 @@
 				"email"=>"varchar(191)",
 				"role"=>"varchar(128)",
 				"creation_timestamp"=>"int(11)",
+				"marked_as_deleted"=>"tinyint(1)",
 				"PRIMARY KEY"=>"(`id`)",
 			]);
 		}

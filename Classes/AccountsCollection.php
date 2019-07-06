@@ -16,7 +16,7 @@
 		* Gets all accounts
 		*
 		* @param int $sort
-		* @return array<Account>
+		* @return Account[]
 		*/
 		public static function getAllAccounts(int $sort = self::SORT_ALPHABETICAL){
 			$accounts = [];
@@ -29,12 +29,15 @@
 			}
 
 			$result = $db->query("
-				SELECT * FROM `users`
+				SELECT * FROM `" . Account::ACCOUNTS_TABLE_NAME . "`
+				WHERE `marked_as_deleted` = 0
 				$orderClause
 			");
 
 			foreach($result as $row){
-				$accounts[] = new Account($row);
+				$account = new Account(0);
+				$account->setRow($row);
+				$accounts[] = $account;
 			}
 
 			return $accounts;

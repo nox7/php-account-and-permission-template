@@ -23,12 +23,30 @@
 		private $row;
 
 		/**
-		* Creates an Account object from an SQL row
+		* Creates an Account object from an account ID
 		*
-		* @param array $tableRow
+		* @param int $accountID
+		* @param bool $findDeletedAccounts If true, will also return an account row that is marked as having been "deleted"
+		* @return Account
 		*/
-		public function __construct(array $tableRow){
-			$this->row = $tableRow;
+		public function __construct(int $accountID, bool $findDeletedAccounts = false){
+			if ($accountID !== 0){
+				$deletedFlag = !$findDeletedAccounts ? 0 : 1;
+				$db = SQLDatabase::connect();
+				$statement = $db->prepare("
+					SELECT * FROM `" . self::ACCOUNTS_TABLE_NAME . "`
+					WHERE `id` = ? AND `marked_as_deleted` = ?
+					LIMIT 1
+				");
+				$statement->bind_param("ii", $accountID, $deletedFlag);
+				$statement->execute();
+				$result = $statement->get_result();
+
+				if ($result->num_rows > 0){
+					$row = $result->fetch_assoc();
+					$this->row = $row;
+				}
+			}
 		}
 
 		/**
@@ -39,20 +57,21 @@
 		* @param string $firstName
 		* @param string $lastName
 		* @param string $password Unhashed password
+		* @param string $roleName The role the new account will have
 		* @return int The new user's ID
 		*/
-		public static function createNew(string $username, string $email, string $firstName, string $lastName, string $password){
+		public static function createNew(string $username, string $email, string $firstName, string $lastName, string $password, string $roleName){
 			$db = SQLDatabase::connect();
 
 			$passwordHashed = password_hash($password, PASSWORD_DEFAULT);
 
 			$statement = $db->prepare("
 				INSERT INTO `" . self::ACCOUNTS_TABLE_NAME . "`
-				(`username`, `email`, `first_name`, `last_name`, `password`, `creation_timestamp`)
+				(`username`, `email`, `first_name`, `last_name`, `password`, `creation_timestamp`, `role`)
 				VALUES
-				(?,?,?,?,?,unix_timestamp())
+				(?,?,?,?,?,unix_timestamp(),?)
 			");
-			$statement->bind_param("sssss", $username, $email, $firstName, $lastName, $passwordHashed);
+			$statement->bind_param("ssssss", $username, $email, $firstName, $lastName, $passwordHashed, $roleName);
 			$statement->execute();
 			$statement->store_result();
 
@@ -78,9 +97,11 @@
 
 			if ($result->num_rows > 0){
 				$row = $result->fetch_assoc();
-				return new self($row);
+				$account = new self(0);
+				$account->setRow($row);
+				return $account;
 			}else{
-				return new self([]);
+				return new self(0);
 			}
 		}
 
@@ -91,6 +112,16 @@
 		*/
 		public function exists(){
 			return isset($this->row) && is_array($this->row) && !empty($this->row);
+		}
+
+		/**
+		* Sets the SQL row of the Account instance
+		*
+		* @param array $row
+		* @return void
+		*/
+		public function setRow(array $row){
+			$this->row = $row;
 		}
 
 		/**
@@ -108,6 +139,34 @@
 			}
 
 			return $role->hasPermission($permission);
+		}
+
+		/**
+		* Marks the account as "deleted"
+		*
+		* This is useful when you want the account to be inaccessible, but for recording or logging reasons still need information about the ID of this account. This flag, in your application, should be checked to make sure this account cannot be logged into or profiles shown.
+		*
+		* @param void
+		*/
+		public function flagAsDeleted(){
+			$db = SQLDatabase::connect();
+			$statement = $db->prepare("
+				UPDATE `" . self::ACCOUNTS_TABLE_NAME . "`
+				SET `marked_as_deleted` = 1
+				WHERE `id` = ?
+			");
+			$accountID = $this->getID();
+			$statement->bind_param("i", $accountID);
+			$statement->execute();
+		}
+
+		/**
+		* Get the Account's ID
+		*
+		* @return int
+		*/
+		public function getID(){
+			return $this->exists() ? (int) $this->row['id'] : "";
 		}
 
 		/**
