@@ -17,31 +17,34 @@ You can either call this function when beginning your application, or review the
 
 If not using the static method above to create the tables system template needs, here are the tables and columns to create in MySQL (or using phpMyAdmin)
 
-**Table Name:** roles (utf8mb4_unicode_ci)
+**Table Name:** roles (utf8mb4_unicode_ci
+
 | Column | Type | Auto Increment |
--|-|-
-| id (PRIMARY) | int(11) | yes
-| name | varchar(191) |
-| creation_time| int(11) |
+| --- | --- | --- |
+| id (PRIMARY) | int(11) | yes |
+| name | varchar(191) |  |
+| creation_time | int(11) |  |
 
 **Table Name:** role_permissions (utf8mb4_unicode_ci)
+
 | Column | Type | Auto Increment |
--|-|-
-| id (PRIMARY) | int(11) | yes
-| role_id | varchar(191) |
-| permission_name| varchar(191) |
+| --- | --- | --- |
+| id (PRIMARY) | int(11) | yes |
+| role_id | varchar(191) |  |
+| permission_name | varchar(191) |  |
 
 **Table Name:** users (utf8mb4_unicode_ci)
+
 | Column | Type | Auto Increment |
--|-|-
-| id (PRIMARY) | int(11) | yes
-| username | varchar(128) |
-| password | varchar(255) |
-| first_name | varchar(128) |
-| last_name| varchar(128) |
-| email | varchar(191) |
-| role | varchar(128) |
-| creation_timestamp | int(11) |
+| --- | ---| --- |
+| id (PRIMARY) | int(11) | yes |
+| username | varchar(128) |  |
+| password | varchar(255) |  |
+| first_name | varchar(128) |  |
+| last_name| varchar(128) |  |
+| email | varchar(191) |  |
+| role | varchar(128) |  |
+| creation_timestamp | int(11) |  |
 
 ## Customizing the Table Names Used
 
